@@ -16,15 +16,21 @@ define(['xhr'], function(xhr) {
      * @method getData
      * @param {String} projectId - GD project identifier
      * @param {Array} elements - An array of attribute or metric identifiers.
+     * @param {Object} filters - An array of filters in gdc-client format (exec. context)
      * @return {Object} Structure with `headers` and `rawData` keys filled with values from execution.
      */
-    var getData = function(projectId, elements) {
+    var getData = function(projectId, elements, filters) {
         // Create request and result structures
         var request = {
             execution: {
                 columns: elements
             }
         };
+
+        if (filters) {
+            request.execution.filters = filters;
+        }
+
         var executedReport = {
             isLoaded: false
         };
