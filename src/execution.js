@@ -303,6 +303,9 @@ const dateFilterToWhere = f => {
 };
 
 const metricToDefinition = metric => ({ element: get(metric, 'objectUri') });
+const isDateFilterExecutable = dateFilterSettings =>
+    get(dateFilterSettings, 'from') !== undefined &&
+    get(dateFilterSettings, 'to') !== undefined;
 
 export const mdToExecutionConfiguration = (mdObj) => {
     const { filters } = mdObj;
@@ -334,7 +337,7 @@ export const mdToExecutionConfiguration = (mdObj) => {
     });
     const attributeMetrics = map(filter(measures, m => m.type === 'attribute' && !m.showInPercent && !m.showPoP), generatedMetricDefinition);
     const attributeFilters = map(filter(filters, ({ listAttributeFilter }) => listAttributeFilter !== undefined), attributeFilterToWhere);
-    const dateFilters = map(filter(filters, ({ dateFilterSettings }) => dateFilterSettings !== undefined), dateFilterToWhere);
+    const dateFilters = map(filter(filters, ({ dateFilterSettings }) => isDateFilterExecutable(dateFilterSettings)), dateFilterToWhere);
 
     const allMetrics = [].concat(
         attributes,
