@@ -236,3 +236,9 @@ export const post = xhrMethod('POST');
  * @method put
  */
 export const put = xhrMethod('PUT');
+
+/**
+ * Wrapper for xhr.ajax method DELETE
+ * @method delete
+ */
+export const del = xhrMethod('DELETE');

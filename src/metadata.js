@@ -5,7 +5,7 @@ import {
     chunk,
     flatten
 } from 'lodash';
-import { ajax, get, post, parseJSON } from './xhr';
+import { ajax, get, post, del, parseJSON } from './xhr';
 import { getIn } from './util';
 
 /**
@@ -542,4 +542,15 @@ export function getObjectUri(projectId, identifier) {
             return uriFinder(objectData);
         });
     });
+}
+
+/**
+ * Delete object
+ *
+ * @experimental
+ * @method deleteObject
+ * @param {String} uri of the object to be deleted
+ */
+export function deleteObject(uri) {
+    return del(uri);
 }

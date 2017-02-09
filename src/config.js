@@ -68,6 +68,5 @@ export function getFetch() {
  * @param {function} f fetch function
  */
 export function setFetch(f) {
-    console.log('setting fetch', f); // eslint-disable-line
     fetch = f;
 }
