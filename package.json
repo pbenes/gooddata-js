@@ -1,6 +1,6 @@
 {
   "name": "gooddata",
-  "version": "4.3.1",
+  "version": "4.3.1-pavelzgdc-pzb-execute-afm-2017-11-06T10-03-05-048Z",
   "author": "GoodData",
   "description": "GoodData JavaScript SDK",
   "license": "BSD-3-Clause",
@@ -63,6 +63,7 @@
     "webpack-dev-server": "1.16.1"
   },
   "dependencies": {
+    "@gooddata/typings": "^0.0.1-vaclavbohac-init-2017-11-03T09-46-45-561Z",
     "es6-promise": "3.0.2",
     "fetch-cookie": "0.4.0",
     "invariant": "2.2.2",
