@@ -16,7 +16,7 @@ describe('nextPageOffset', () => {
     });
     it('should work for 3 dimensions', () => {
         expect(nextPageOffset({ offset: [0, 0, 0], total: [501, 501, 501] })).toEqual([0, 0, 500]);
-        expect(nextPageOffset({ offset: [0, 0, 0], total: [501, 501, 501] })).toEqual([0, 0, 500]);
+        expect(nextPageOffset({ offset: [500, 0, 0], total: [501, 501, 501] })).toEqual([500, 0, 500]);
         expect(nextPageOffset({ offset: [500, 500, 500], total: [501, 501, 501] })).toEqual(false);
     });
 });
@@ -156,7 +156,7 @@ describe('executionAfm', () => {
                 return pollingCounter === 1
                     ? {
                         status: 202,
-                        headers: { Location: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=500%2C500&offset=0%2C0' } //eslint-disable-line
+                        headers: { Location: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=500%2C500&offset=0%2C0' }
                     }
                     : {
                         status: 200,

@@ -58,9 +58,9 @@ export function nextPageOffset({ offset, total }) {
     return false;
 }
 
-function getOnePage(pollingUri, offset, resultSoFar = false) {
+function getOnePage(pollingUri, offset, prevResult = null) {
     return fetchExecutionResult(pollingUri, offset).then(({ executionResult }) => {
-        const newResult = resultSoFar ? mergePageData(resultSoFar, executionResult) : executionResult;
+        const newResult = prevResult ? mergePageData(prevResult, executionResult) : executionResult;
 
         const nextOffset = nextPageOffset(executionResult.paging);
         return nextOffset
