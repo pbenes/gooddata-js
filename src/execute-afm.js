@@ -8,7 +8,10 @@ const PAGE_SIZE = 500;
 const DEFAULT_DIMENSION_COUNT = 2;
 
 function getDimensionality(execution) {
-    return get(execution, 'execution.resultSpec.dimensions').length || DEFAULT_DIMENSION_COUNT;
+    const dimensions = get(execution, 'execution.resultSpec.dimensions');
+    return dimensions
+        ? dimensions.length
+        : DEFAULT_DIMENSION_COUNT;
 }
 
 function getLimit(offset) {
@@ -29,8 +32,8 @@ function fetchExecutionResult(pollingUri, offset) {
 }
 
 // works only for one or two dimensions
-export function mergePageData(resultSoFar, { offset, data }) {
-    const rowOffset = offset[0];
+export function mergePageData(resultSoFar, { paging, data }) {
+    const rowOffset = paging.offset[0];
     if (resultSoFar.data[rowOffset]) { // appending columns to existing rows
         for (let i = 0; i < data.length; i += 1) {
             resultSoFar.data[i + rowOffset].push(...data[i]);
@@ -41,12 +44,12 @@ export function mergePageData(resultSoFar, { offset, data }) {
     return resultSoFar;
 }
 
-export function nextPageOffset({ offset, overallSize }) {
+export function nextPageOffset({ offset, total }) {
     const newOffset = clone(offset);
     const maxDimension = offset.length - 1;
     // we need last dimension first (aka columns, then rows) to allow array appending in merge fnc
     for (let i = maxDimension; i >= 0; i -= 1) {
-        if (newOffset[i] + PAGE_SIZE < overallSize[i]) {
+        if (newOffset[i] + PAGE_SIZE < total[i]) {
             newOffset[i] += PAGE_SIZE;
             return newOffset;
         }
@@ -59,7 +62,7 @@ function getOnePage(pollingUri, offset, resultSoFar = false) {
     return fetchExecutionResult(pollingUri, offset).then(({ executionResult }) => {
         const newResult = resultSoFar ? mergePageData(resultSoFar, executionResult) : executionResult;
 
-        const nextOffset = nextPageOffset(executionResult);
+        const nextOffset = nextPageOffset(executionResult.paging);
         return nextOffset
             ? getOnePage(pollingUri, nextOffset, newResult)
             : newResult;

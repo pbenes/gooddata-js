@@ -4,20 +4,20 @@ import executionAfm, { nextPageOffset, mergePageData } from '../src/execute-afm'
 
 describe('nextPageOffset', () => {
     it('should work for 1 dimension', () => {
-        expect(nextPageOffset({ offset: [0], overallSize: [501] })).toEqual([500]);
-        expect(nextPageOffset({ offset: [500], overallSize: [501] })).toEqual(false);
-        expect(nextPageOffset({ offset: [0], overallSize: [1] })).toEqual(false);
+        expect(nextPageOffset({ offset: [0], total: [501] })).toEqual([500]);
+        expect(nextPageOffset({ offset: [500], total: [501] })).toEqual(false);
+        expect(nextPageOffset({ offset: [0], total: [1] })).toEqual(false);
     });
     it('should work for 2 dimensions', () => {
-        expect(nextPageOffset({ offset: [0, 0], overallSize: [501, 501] })).toEqual([0, 500]);
-        expect(nextPageOffset({ offset: [0, 500], overallSize: [501, 501] })).toEqual([500, 0]);
-        expect(nextPageOffset({ offset: [500, 0], overallSize: [501, 501] })).toEqual([500, 500]);
-        expect(nextPageOffset({ offset: [500, 500], overallSize: [501, 501] })).toEqual(false);
+        expect(nextPageOffset({ offset: [0, 0], total: [501, 501] })).toEqual([0, 500]);
+        expect(nextPageOffset({ offset: [0, 500], total: [501, 501] })).toEqual([500, 0]);
+        expect(nextPageOffset({ offset: [500, 0], total: [501, 501] })).toEqual([500, 500]);
+        expect(nextPageOffset({ offset: [500, 500], total: [501, 501] })).toEqual(false);
     });
     it('should work for 3 dimensions', () => {
-        expect(nextPageOffset({ offset: [0, 0, 0], overallSize: [501, 501, 501] })).toEqual([0, 0, 500]);
-        expect(nextPageOffset({ offset: [0, 0, 0], overallSize: [501, 501, 501] })).toEqual([0, 0, 500]);
-        expect(nextPageOffset({ offset: [500, 500, 500], overallSize: [501, 501, 501] })).toEqual(false);
+        expect(nextPageOffset({ offset: [0, 0, 0], total: [501, 501, 501] })).toEqual([0, 0, 500]);
+        expect(nextPageOffset({ offset: [0, 0, 0], total: [501, 501, 501] })).toEqual([0, 0, 500]);
+        expect(nextPageOffset({ offset: [500, 500, 500], total: [501, 501, 501] })).toEqual(false);
     });
 });
 
@@ -25,21 +25,21 @@ describe('mergePageData', () => {
     it('should work for 1 dimension', () => {
         let result = { data: [1] };
 
-        result = mergePageData(result, { offset: [1], data: [2] });
+        result = mergePageData(result, { paging: { offset: [1] }, data: [2] });
         expect(result).toEqual({ data: [1, 2] });
 
-        result = mergePageData(result, { offset: [2], data: [3] });
+        result = mergePageData(result, { paging: { offset: [2] }, data: [3] });
         expect(result).toEqual({ data: [1, 2, 3] });
     });
 
     it('should work for 2 dimensions', () => {
         let result = { data: [[11, 12], [21, 22]] };
 
-        result = mergePageData(result, { offset: [0, 2], data: [[13], [23]] });
+        result = mergePageData(result, { paging: { offset: [0, 2] }, data: [[13], [23]] });
         expect(result).toEqual({ data: [[11, 12, 13], [21, 22, 23]] });
 
-        result = mergePageData(result, { offset: [2, 0], data: [[51, 52]] });
-        result = mergePageData(result, { offset: [2, 2], data: [[53]] });
+        result = mergePageData(result, { paging: { offset: [2, 0] }, data: [[51, 52]] });
+        result = mergePageData(result, { paging: { offset: [2, 2] }, data: [[53]] });
         expect(result).toEqual({ data: [[11, 12, 13], [21, 22, 23], [51, 52, 53]] });
     });
 });
@@ -48,17 +48,6 @@ describe('executionAfm', () => {
     beforeEach(() => {
         expect.hasAssertions();
         fetchMock.restore();
-    });
-
-    it('should reject when executeAfm fails', () => {
-        fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
-            400
-        );
-        return executionAfm('myFakeProjectId', {}).catch((err) => {
-            expect(err).toBeInstanceOf(Error);
-            expect(err.response.status).toBe(400);
-        });
     });
 
     function pollingResponseBody() {
@@ -73,8 +62,19 @@ describe('executionAfm', () => {
     }
 
     function executionResultResponseBody() {
-        return { executionResult: { data: [[11, 12], [51, 52]], overallSize: [2, 2], offset: [0, 0] } };
+        return { executionResult: { data: [[11, 12], [51, 52]], paging: { total: [2, 2], offset: [0, 0] } } };
     }
+
+    it('should reject when executeAfm fails', () => {
+        fetchMock.mock(
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            400
+        );
+        return executionAfm('myFakeProjectId', {}).catch((err) => {
+            expect(err).toBeInstanceOf(Error);
+            expect(err.response.status).toBe(400);
+        });
+    });
 
     it('should reject when first polling fails', () => {
         fetchMock.mock(
@@ -184,10 +184,10 @@ describe('executionAfm', () => {
         );
 
         const pagesByOffset = {
-            '0,0': { executionResult: { data: Array(500).fill([1, 2]), overallSize: [501, 501], offset: [0, 0] } },
-            '0,500': { executionResult: { data: Array(500).fill([3]), overallSize: [501, 501], offset: [0, 500] } },
-            '500,0': { executionResult: { data: [[91, 92]], overallSize: [501, 501], offset: [500, 0] } },
-            '500,500': { executionResult: { data: [[93]], overallSize: [501, 501], offset: [500, 500] } }
+            '0,0': { executionResult: { data: Array(500).fill([1, 2]), paging: { total: [501, 501], offset: [0, 0] } } },
+            '0,500': { executionResult: { data: Array(500).fill([3]), paging: { total: [501, 501], offset: [0, 500] } } },
+            '500,0': { executionResult: { data: [[91, 92]], paging: { total: [501, 501], offset: [500, 0] } } },
+            '500,500': { executionResult: { data: [[93]], paging: { total: [501, 501], offset: [500, 500] } } }
         };
 
         fetchMock.mock(
@@ -207,8 +207,10 @@ describe('executionAfm', () => {
                 },
                 executionResult: {
                     data: [...Array(500).fill([1, 2, 3]), [91, 92, 93]],
-                    overallSize: [501, 501],
-                    offset: [0, 0]
+                    paging: {
+                        total: [501, 501],
+                        offset: [0, 0]
+                    }
                 }
             });
         });
@@ -221,8 +223,8 @@ describe('executionAfm', () => {
         );
 
         const pagesByOffset = {
-            0: { executionResult: { data: [1], overallSize: [501], offset: [0] } },
-            500: { executionResult: { data: [2], overallSize: [501], offset: [500] } }
+            0: { executionResult: { data: [1], paging: { total: [501], offset: [0] } } },
+            500: { executionResult: { data: [2], paging: { total: [501], offset: [500] } } }
         };
 
         fetchMock.mock(
@@ -242,8 +244,10 @@ describe('executionAfm', () => {
                 },
                 executionResult: {
                     data: [1, 2],
-                    overallSize: [501],
-                    offset: [0]
+                    paging: {
+                        total: [501],
+                        offset: [0]
+                    }
                 }
             });
         });
