@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@gooddata/typings@^0.0.1-vaclavbohac-init-2017-11-03T09-46-45-561Z":
+"@gooddata/typings@0.0.1-vaclavbohac-init-2017-11-03T09-46-45-561Z":
   version "0.0.1-vaclavbohac-init-2017-11-03T09-46-45-561Z"
   resolved "https://registry.yarnpkg.com/@gooddata/typings/-/typings-0.0.1-vaclavbohac-init-2017-11-03T09-46-45-561Z.tgz#2e77c7c658abdf80e5f65f2fd45f873e6e7671ed"
 
