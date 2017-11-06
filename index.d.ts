@@ -343,7 +343,7 @@ export module execution {
 
     export function getData(projectId: string, columns: string[], executionConfiguration: IExecutionConfiguration, settings: any): Promise<ISimpleExecutorResult>;
 
-    export function executeAfm(projectId: string, execution: AFM.IExecution): Execution.IExecutionResponses;
+    export function executeAfm(projectId: string, execution: AFM.IExecution): Promise<Execution.IExecutionResponses>;
 }
 
 export interface IColor {

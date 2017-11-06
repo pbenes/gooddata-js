@@ -1,6 +1,6 @@
 // Copyright (C) 2007-2014, GoodData(R) Corporation. All rights reserved.
-import fetchMock from './utils/fetch-mock';
-import executionAfm, { nextPageOffset, mergePageData } from '../src/execute-afm';
+import fetchMock from '../utils/fetch-mock';
+import executionAfm, { nextPageOffset, mergePageData } from '../../src/execution/execute-afm';
 
 describe('nextPageOffset', () => {
     it('should work for 1 dimension', () => {

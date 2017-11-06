@@ -1,8 +1,8 @@
 // Copyright (C) 2007-2014, GoodData(R) Corporation. All rights reserved.
 import { get, mapValues, clone } from 'lodash';
 import invariant from 'invariant';
-import { ajax, post, parseJSON } from './xhr';
-import { queryString } from './util';
+import { ajax, post, parseJSON } from '../xhr';
+import { queryString } from '../util';
 
 const PAGE_SIZE = 500;
 const DEFAULT_DIMENSION_COUNT = 2;
