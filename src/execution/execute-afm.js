@@ -1,8 +1,8 @@
 // Copyright (C) 2007-2014, GoodData(R) Corporation. All rights reserved.
-import { get, mapValues, clone } from 'lodash';
+import { get, clone } from 'lodash';
 import invariant from 'invariant';
+import qs from 'qs';
 import { ajax, post, parseJSON } from '../xhr';
-import { queryString } from '../util';
 
 const PAGE_SIZE = 500;
 const DEFAULT_DIMENSION_COUNT = 2;
@@ -19,9 +19,14 @@ function getLimit(offset) {
 }
 
 function fetchExecutionResult(pollingUri, offset) {
-    const query = { limit: getLimit(offset), offset };
-    const uri = pollingUri + queryString(mapValues(query, arr => arr.join(',')));
-    return ajax(uri, { method: 'GET' }).then((r) => {
+    const [uriPart, queryPart] = pollingUri.split(/\?(.+)/);
+    const query = {
+        ...qs.parse(queryPart),
+        limit: getLimit(offset).join(','),
+        offset: offset.join(',')
+    };
+    const finalPollingUri = uriPart + qs.stringify(query, { addQueryPrefix: true });
+    return ajax(finalPollingUri, { method: 'GET' }).then((r) => {
         if (r.status === 204) {
             const err = new Error('Loading executeAfm failed: 204 No Content');
             err.response = r;
@@ -73,7 +78,7 @@ export default function executeAfm(projectId, execution) {
     const dimensionality = getDimensionality(execution);
     invariant(dimensionality <= 2, 'executeAfm does not support more than 2 dimensions');
 
-    return post(`/gdc/app/projects/${projectId}/executeAfm`, { body: JSON.stringify(execution) })
+    return post(`/gdc/app/projects/${projectId}/execute/executeAfm`, { body: JSON.stringify(execution) })
         .then(parseJSON)
         .then(({ executionResponse }) => {
             const offset = Array(dimensionality).fill(0); // offset holds information on dimensionality

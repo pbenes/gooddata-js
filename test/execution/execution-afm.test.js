@@ -55,7 +55,7 @@ describe('executionAfm', () => {
             executionResponse: {
                 dimensions: [],
                 links: {
-                    executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123'
+                    executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
                 }
             }
         };
@@ -67,7 +67,7 @@ describe('executionAfm', () => {
 
     it('should reject when executeAfm fails', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             400
         );
         return executionAfm('myFakeProjectId', {}).catch((err) => {
@@ -78,7 +78,7 @@ describe('executionAfm', () => {
 
     it('should reject when first polling fails', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -93,7 +93,7 @@ describe('executionAfm', () => {
 
     it('should reject when first polling returns 204', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -108,7 +108,7 @@ describe('executionAfm', () => {
 
     it('should reject when first polling returns 413', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -123,7 +123,7 @@ describe('executionAfm', () => {
 
     it('should resolve on first polling', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -135,7 +135,7 @@ describe('executionAfm', () => {
                 executionResponse: {
                     dimensions: [],
                     links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123'
+                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
                     }
                 },
                 ...executionResultResponseBody()
@@ -145,7 +145,7 @@ describe('executionAfm', () => {
 
     it('should resolve on second polling', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         let pollingCounter = 0;
@@ -169,7 +169,7 @@ describe('executionAfm', () => {
                 executionResponse: {
                     dimensions: [],
                     links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123'
+                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
                     }
                 },
                 ...executionResultResponseBody()
@@ -179,7 +179,7 @@ describe('executionAfm', () => {
 
     it('should resolve with 2x2 pages', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
 
@@ -202,7 +202,7 @@ describe('executionAfm', () => {
                 executionResponse: {
                     dimensions: [],
                     links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123'
+                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
                     }
                 },
                 executionResult: {
@@ -218,7 +218,7 @@ describe('executionAfm', () => {
 
     it('should resolve for 1 dimension x 2 pages', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
 
@@ -239,7 +239,7 @@ describe('executionAfm', () => {
                 executionResponse: {
                     dimensions: [],
                     links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123'
+                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
                     }
                 },
                 executionResult: {
