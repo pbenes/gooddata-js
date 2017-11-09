@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@gooddata/typings@^0.0.1-vojty-init-2017-11-08T11-33-40-593Z":
-  version "0.0.1-vojty-init-2017-11-08T11-33-40-593Z"
-  resolved "https://registry.yarnpkg.com/@gooddata/typings/-/typings-0.0.1-vojty-init-2017-11-08T11-33-40-593Z.tgz#4695123025953dd55ee6fec23505ae4ed54f882b"
+"@gooddata/typings@0.0.1-vaclavbohac-error-as-exception-2017-11-09T09-35-54-536Z":
+  version "0.0.1-vaclavbohac-error-as-exception-2017-11-09T09-35-54-536Z"
+  resolved "https://registry.yarnpkg.com/@gooddata/typings/-/typings-0.0.1-vaclavbohac-error-as-exception-2017-11-09T09-35-54-536Z.tgz#f6259558d82f383d16184b56e39b37b18dcc55d7"
 
 Base64@~0.2.0:
   version "0.2.1"
@@ -4653,7 +4653,7 @@ qs@6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.2.0.tgz#3b7848c03c2dece69a9522b0fae8c4126d745f3b"
 
-qs@6.5.1, qs@^6.5.1, qs@~6.5.1:
+qs@6.5.1, qs@~6.5.1:
   version "6.5.1"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.1.tgz#349cdf6eef89ec45c12d7d5eb3fc0c870343a6d8"
 

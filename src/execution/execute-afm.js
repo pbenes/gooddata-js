@@ -28,25 +28,24 @@ function fetchExecutionResult(pollingUri, offset) {
     const finalPollingUri = uriPart + qs.stringify(query, { addQueryPrefix: true });
     return ajax(finalPollingUri, { method: 'GET' }).then((r) => {
         if (r.status === 204) {
-            const err = new Error('Loading executeAfm failed: 204 No Content');
-            err.response = r;
-            throw err;
+            return null;
         }
         return r.json();
     });
 }
 
 // works only for one or two dimensions
-export function mergePageData(resultSoFar, { paging, data }) {
+export function mergePageData(result, currentPage) {
+    const { paging, data } = currentPage.executionResult;
     const rowOffset = paging.offset[0];
-    if (resultSoFar.data[rowOffset]) { // appending columns to existing rows
+    if (result.executionResult.data[rowOffset]) { // appending columns to existing rows
         for (let i = 0; i < data.length; i += 1) {
-            resultSoFar.data[i + rowOffset].push(...data[i]);
+            result.executionResult.data[i + rowOffset].push(...data[i]);
         }
     } else { // appending new rows
-        resultSoFar.data.push(...data);
+        result.executionResult.data.push(...data);
     }
-    return resultSoFar;
+    return result;
 }
 
 export function nextPageOffset({ offset, total }) {
@@ -64,10 +63,14 @@ export function nextPageOffset({ offset, total }) {
 }
 
 function getOnePage(pollingUri, offset, prevResult = null) {
-    return fetchExecutionResult(pollingUri, offset).then(({ executionResult }) => {
+    return fetchExecutionResult(pollingUri, offset).then((executionResult) => {
+        if (executionResult === null) {
+            return null;
+        }
+
         const newResult = prevResult ? mergePageData(prevResult, executionResult) : executionResult;
 
-        const nextOffset = nextPageOffset(executionResult.paging);
+        const nextOffset = nextPageOffset(executionResult.executionResult.paging);
         return nextOffset
             ? getOnePage(pollingUri, nextOffset, newResult)
             : newResult;
@@ -80,9 +83,10 @@ export default function executeAfm(projectId, execution) {
 
     return post(`/gdc/app/projects/${projectId}/execute/executeAfm`, { body: JSON.stringify(execution) })
         .then(parseJSON)
-        .then(({ executionResponse }) => {
+        .then((executionResponse) => {
             const offset = Array(dimensionality).fill(0); // offset holds information on dimensionality
-            return getOnePage(executionResponse.links.executionResult, offset).then((executionResult) => {
+            const pollingUri = executionResponse.executionResponse.links.executionResult;
+            return getOnePage(pollingUri, offset).then((executionResult) => {
                 return {
                     executionResponse,
                     executionResult

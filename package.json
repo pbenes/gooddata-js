@@ -63,7 +63,7 @@
     "webpack-dev-server": "1.16.1"
   },
   "dependencies": {
-    "@gooddata/typings": "0.0.1-vojty-init-2017-11-08T11-33-40-593Z",
+    "@gooddata/typings": "0.0.1-vaclavbohac-error-as-exception-2017-11-09T09-35-54-536Z",
     "es6-promise": "3.0.2",
     "fetch-cookie": "0.4.0",
     "invariant": "2.2.2",

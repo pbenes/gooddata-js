@@ -1,6 +1,6 @@
 // Copyright (C) 2007-2014, GoodData(R) Corporation. All rights reserved.
 import fetchMock from '../utils/fetch-mock';
-import executionAfm, { nextPageOffset, mergePageData } from '../../src/execution/execute-afm';
+import executeAfm, { nextPageOffset, mergePageData } from '../../src/execution/execute-afm';
 
 describe('nextPageOffset', () => {
     it('should work for 1 dimension', () => {
@@ -23,28 +23,28 @@ describe('nextPageOffset', () => {
 
 describe('mergePageData', () => {
     it('should work for 1 dimension', () => {
-        let result = { data: [1] };
+        let result = { executionResult: { data: [1] } };
 
-        result = mergePageData(result, { paging: { offset: [1] }, data: [2] });
-        expect(result).toEqual({ data: [1, 2] });
+        result = mergePageData(result, { executionResult: { paging: { offset: [1] }, data: [2] } });
+        expect(result).toEqual({ executionResult: { data: [1, 2] } });
 
-        result = mergePageData(result, { paging: { offset: [2] }, data: [3] });
-        expect(result).toEqual({ data: [1, 2, 3] });
+        result = mergePageData(result, { executionResult: { paging: { offset: [2] }, data: [3] } });
+        expect(result).toEqual({ executionResult: { data: [1, 2, 3] } });
     });
 
     it('should work for 2 dimensions', () => {
-        let result = { data: [[11, 12], [21, 22]] };
+        let result = { executionResult: { data: [[11, 12], [21, 22]] } };
 
-        result = mergePageData(result, { paging: { offset: [0, 2] }, data: [[13], [23]] });
-        expect(result).toEqual({ data: [[11, 12, 13], [21, 22, 23]] });
+        result = mergePageData(result, { executionResult: { paging: { offset: [0, 2] }, data: [[13], [23]] } });
+        expect(result).toEqual({ executionResult: { data: [[11, 12, 13], [21, 22, 23]] } });
 
-        result = mergePageData(result, { paging: { offset: [2, 0] }, data: [[51, 52]] });
-        result = mergePageData(result, { paging: { offset: [2, 2] }, data: [[53]] });
-        expect(result).toEqual({ data: [[11, 12, 13], [21, 22, 23], [51, 52, 53]] });
+        result = mergePageData(result, { executionResult: { paging: { offset: [2, 0] }, data: [[51, 52]] } });
+        result = mergePageData(result, { executionResult: { paging: { offset: [2, 2] }, data: [[53]] } });
+        expect(result).toEqual({ executionResult: { data: [[11, 12, 13], [21, 22, 23], [51, 52, 53]] } });
     });
 });
 
-describe('executionAfm', () => {
+describe('executeAfm', () => {
     beforeEach(() => {
         expect.hasAssertions();
         fetchMock.restore();
@@ -65,12 +65,12 @@ describe('executionAfm', () => {
         return { executionResult: { data: [[11, 12], [51, 52]], paging: { total: [2, 2], offset: [0, 0] } } };
     }
 
-    it('should reject when executeAfm fails', () => {
+    it('should reject when /executeAfm fails', () => {
         fetchMock.mock(
             '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             400
         );
-        return executionAfm('myFakeProjectId', {}).catch((err) => {
+        return executeAfm('myFakeProjectId', {}).catch((err) => {
             expect(err).toBeInstanceOf(Error);
             expect(err.response.status).toBe(400);
         });
@@ -85,13 +85,13 @@ describe('executionAfm', () => {
             '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=500%2C500&offset=0%2C0',
             400
         );
-        return executionAfm('myFakeProjectId', {}).catch((err) => {
+        return executeAfm('myFakeProjectId', {}).catch((err) => {
             expect(err).toBeInstanceOf(Error);
             expect(err.response.status).toBe(400);
         });
     });
 
-    it('should reject when first polling returns 204', () => {
+    it('should resolve when first polling returns 204', () => {
         fetchMock.mock(
             '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
@@ -100,9 +100,11 @@ describe('executionAfm', () => {
             '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=500%2C500&offset=0%2C0',
             204
         );
-        return executionAfm('myFakeProjectId', {}).catch((err) => {
-            expect(err).toBeInstanceOf(Error);
-            expect(err.response.status).toBe(204);
+        return executeAfm('myFakeProjectId', {}).then((response) => {
+            expect(response).toEqual({
+                executionResponse: pollingResponseBody(),
+                executionResult: null
+            });
         });
     });
 
@@ -115,7 +117,7 @@ describe('executionAfm', () => {
             '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=500%2C500&offset=0%2C0',
             413
         );
-        return executionAfm('myFakeProjectId', {}).catch((err) => {
+        return executeAfm('myFakeProjectId', {}).catch((err) => {
             expect(err).toBeInstanceOf(Error);
             expect(err.response.status).toBe(413);
         });
@@ -130,15 +132,10 @@ describe('executionAfm', () => {
             '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=500%2C500&offset=0%2C0',
             { status: 200, body: JSON.stringify(executionResultResponseBody()) }
         );
-        return executionAfm('myFakeProjectId', {}).then((response) => {
+        return executeAfm('myFakeProjectId', {}).then((response) => {
             expect(response).toEqual({
-                executionResponse: {
-                    dimensions: [],
-                    links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
-                    }
-                },
-                ...executionResultResponseBody()
+                executionResponse: pollingResponseBody(),
+                executionResult: executionResultResponseBody()
             });
         });
     });
@@ -164,15 +161,10 @@ describe('executionAfm', () => {
                     };
             }
         );
-        return executionAfm('myFakeProjectId', {}).then((response) => {
+        return executeAfm('myFakeProjectId', {}).then((response) => {
             expect(response).toEqual({
-                executionResponse: {
-                    dimensions: [],
-                    links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
-                    }
-                },
-                ...executionResultResponseBody()
+                executionResponse: pollingResponseBody(),
+                executionResult: executionResultResponseBody()
             });
         });
     });
@@ -197,19 +189,16 @@ describe('executionAfm', () => {
                 return { status: 200, body: JSON.stringify(pagesByOffset[offset]) };
             }
         );
-        return executionAfm('myFakeProjectId', {}).then((response) => {
+        return executeAfm('myFakeProjectId', {}).then((response) => {
             expect(response).toEqual({
-                executionResponse: {
-                    dimensions: [],
-                    links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
-                    }
-                },
+                executionResponse: pollingResponseBody(),
                 executionResult: {
-                    data: [...Array(500).fill([1, 2, 3]), [91, 92, 93]],
-                    paging: {
-                        total: [501, 501],
-                        offset: [0, 0]
+                    executionResult: {
+                        data: [...Array(500).fill([1, 2, 3]), [91, 92, 93]],
+                        paging: {
+                            total: [501, 501],
+                            offset: [0, 0]
+                        }
                     }
                 }
             });
@@ -234,19 +223,16 @@ describe('executionAfm', () => {
                 return { status: 200, body: JSON.stringify(pagesByOffset[offset]) };
             }
         );
-        return executionAfm('myFakeProjectId', { execution: { resultSpec: { dimensions: [1] } } }).then((response) => {
+        return executeAfm('myFakeProjectId', { execution: { resultSpec: { dimensions: [1] } } }).then((response) => {
             expect(response).toEqual({
-                executionResponse: {
-                    dimensions: [],
-                    links: {
-                        executionResult: '/gdc/app/projects/myFakeProjectId/executionResults/123?limit=overriden'
-                    }
-                },
+                executionResponse: pollingResponseBody(),
                 executionResult: {
-                    data: [1, 2],
-                    paging: {
-                        total: [501],
-                        offset: [0]
+                    executionResult: {
+                        data: [1, 2],
+                        paging: {
+                            total: [501],
+                            offset: [0]
+                        }
                     }
                 }
             });
