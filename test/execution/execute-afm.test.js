@@ -67,7 +67,7 @@ describe('executeAfm', () => {
 
     it('should reject when /executeAfm fails', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             400
         );
         return executeAfm('myFakeProjectId', {}).catch((err) => {
@@ -78,7 +78,7 @@ describe('executeAfm', () => {
 
     it('should reject when first polling fails', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -93,7 +93,7 @@ describe('executeAfm', () => {
 
     it('should resolve when first polling returns 204', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -110,7 +110,7 @@ describe('executeAfm', () => {
 
     it('should reject when first polling returns 413', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -125,7 +125,7 @@ describe('executeAfm', () => {
 
     it('should resolve on first polling', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         fetchMock.mock(
@@ -142,7 +142,7 @@ describe('executeAfm', () => {
 
     it('should resolve on second polling', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
         let pollingCounter = 0;
@@ -171,7 +171,7 @@ describe('executeAfm', () => {
 
     it('should resolve with 2x2 pages', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
 
@@ -207,7 +207,7 @@ describe('executeAfm', () => {
 
     it('should resolve for 1 dimension x 2 pages', () => {
         fetchMock.mock(
-            '/gdc/app/projects/myFakeProjectId/execute/executeAfm',
+            '/gdc/app/projects/myFakeProjectId/executeAfm',
             { status: 200, body: JSON.stringify(pollingResponseBody()) }
         );
 

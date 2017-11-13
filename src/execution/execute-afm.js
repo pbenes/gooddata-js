@@ -81,7 +81,7 @@ export default function executeAfm(projectId, execution) {
     const dimensionality = getDimensionality(execution);
     invariant(dimensionality <= 2, 'executeAfm does not support more than 2 dimensions');
 
-    return post(`/gdc/app/projects/${projectId}/execute/executeAfm`, { body: JSON.stringify(execution) })
+    return post(`/gdc/app/projects/${projectId}/executeAfm`, { body: JSON.stringify(execution) })
         .then(parseJSON)
         .then((executionResponse) => {
             const offset = Array(dimensionality).fill(0); // offset holds information on dimensionality
