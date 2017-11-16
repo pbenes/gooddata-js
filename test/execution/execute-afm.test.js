@@ -23,24 +23,74 @@ describe('nextPageOffset', () => {
 
 describe('mergePageData', () => {
     it('should work for 1 dimension', () => {
-        let result = { executionResult: { data: [1] } };
+        let result = { executionResult: { data: [1], headerItems: [[['A1']]] } };
 
-        result = mergePageData(result, { executionResult: { paging: { offset: [1] }, data: [2] } });
-        expect(result).toEqual({ executionResult: { data: [1, 2] } });
+        result = mergePageData(result, {
+            executionResult: {
+                paging: { offset: [1] },
+                data: [2],
+                headerItems: [[['A1']]]
+            }
+        });
+        expect(result).toEqual({ executionResult: { data: [1, 2], headerItems: [[['A1']]] } });
 
-        result = mergePageData(result, { executionResult: { paging: { offset: [2] }, data: [3] } });
-        expect(result).toEqual({ executionResult: { data: [1, 2, 3] } });
+        result = mergePageData(result, {
+            executionResult: {
+                paging: { offset: [2] },
+                data: [3],
+                headerItems: [[['A1']]]
+            }
+        });
+        expect(result).toEqual({ executionResult: { data: [1, 2, 3], headerItems: [[['A1']]] } });
     });
 
     it('should work for 2 dimensions', () => {
-        let result = { executionResult: { data: [[11, 12], [21, 22]] } };
+        // page [0,0]
+        let result = {
+            executionResult: {
+                data: [[11, 12], [21, 22]],
+                headerItems: [[['M1', 'M2']], [['A1', 'A2']]]
+            }
+        };
 
-        result = mergePageData(result, { executionResult: { paging: { offset: [0, 2] }, data: [[13], [23]] } });
-        expect(result).toEqual({ executionResult: { data: [[11, 12, 13], [21, 22, 23]] } });
+        // merge page [0,1]
+        result = mergePageData(result, {
+            executionResult: {
+                paging: { offset: [0, 2] },
+                data: [[13], [23]],
+                headerItems: [[['M1', 'M2']], [['A3']]]
+            }
+        });
+        expect(result).toEqual({
+            executionResult: {
+                data: [[11, 12, 13], [21, 22, 23]],
+                headerItems: [[['M1', 'M2']], [['A1', 'A2', 'A3']]]
+            }
+        });
 
-        result = mergePageData(result, { executionResult: { paging: { offset: [2, 0] }, data: [[51, 52]] } });
-        result = mergePageData(result, { executionResult: { paging: { offset: [2, 2] }, data: [[53]] } });
-        expect(result).toEqual({ executionResult: { data: [[11, 12, 13], [21, 22, 23], [51, 52, 53]] } });
+        // merge page [1,0]
+        result = mergePageData(result, {
+            executionResult: {
+                paging: { offset: [2, 0] },
+                data: [[51, 52]],
+                headerItems: [[['M5']], [['A1', 'A2']]]
+            }
+        });
+        // merge page [1,1]
+        result = mergePageData(result, {
+            executionResult: {
+                paging: { offset: [2, 2] },
+                data: [[53]],
+                headerItems: [[['M5']], [['A3']]]
+            }
+        });
+        expect(result).toEqual({
+            executionResult: {
+                data: [[11, 12, 13], [21, 22, 23], [51, 52, 53]],
+                headerItems: [[['M1', 'M2', 'M5']], [['A1', 'A2', 'A3']]]
+
+            }
+        });
     });
 });
 
@@ -62,7 +112,13 @@ describe('executeAfm', () => {
     }
 
     function executionResultResponseBody() {
-        return { executionResult: { data: [[11, 12], [51, 52]], paging: { total: [2, 2], offset: [0, 0] } } };
+        return {
+            executionResult: {
+                data: [[11, 12], [51, 52]],
+                paging: { total: [2, 2], offset: [0, 0] },
+                headerItems: [[['M1', 'M2']], [['A1', 'A2']]]
+            }
+        };
     }
 
     it('should reject when /executeAfm fails', () => {
@@ -176,10 +232,34 @@ describe('executeAfm', () => {
         );
 
         const pagesByOffset = {
-            '0,0': { executionResult: { data: Array(500).fill([1, 2]), paging: { total: [501, 501], offset: [0, 0] } } },
-            '0,500': { executionResult: { data: Array(500).fill([3]), paging: { total: [501, 501], offset: [0, 500] } } },
-            '500,0': { executionResult: { data: [[91, 92]], paging: { total: [501, 501], offset: [500, 0] } } },
-            '500,500': { executionResult: { data: [[93]], paging: { total: [501, 501], offset: [500, 500] } } }
+            '0,0': {
+                executionResult: {
+                    data: Array(500).fill([1, 2]),
+                    paging: { total: [501, 501], offset: [0, 0] },
+                    headerItems: [[Array(500).fill('M')], [['A1', 'A2']]]
+                }
+            },
+            '0,500': {
+                executionResult: {
+                    data: Array(500).fill([3]),
+                    paging: { total: [501, 501], offset: [0, 500] },
+                    headerItems: [[Array(500).fill('M')], [['A3']]]
+                }
+            },
+            '500,0': {
+                executionResult: {
+                    data: [[91, 92]],
+                    paging: { total: [501, 501], offset: [500, 0] },
+                    headerItems: [[['M501']], [['A1', 'A2']]]
+                }
+            },
+            '500,500': {
+                executionResult: {
+                    data: [[93]],
+                    paging: { total: [501, 501], offset: [500, 500] },
+                    headerItems: [[['M501']], [['A3']]]
+                }
+            }
         };
 
         fetchMock.mock(
@@ -198,7 +278,8 @@ describe('executeAfm', () => {
                         paging: {
                             total: [501, 501],
                             offset: [0, 0]
-                        }
+                        },
+                        headerItems: [[[...Array(500).fill('M'), 'M501']], [['A1', 'A2', 'A3']]]
                     }
                 }
             });
@@ -212,14 +293,14 @@ describe('executeAfm', () => {
         );
 
         const pagesByOffset = {
-            0: { executionResult: { data: [1], paging: { total: [501], offset: [0] } } },
-            500: { executionResult: { data: [2], paging: { total: [501], offset: [500] } } }
+            0: { executionResult: { data: [1], paging: { total: [501], offset: [0] }, headerItems: [[['A']]] } },
+            500: { executionResult: { data: [2], paging: { total: [501], offset: [500] }, headerItems: [[['A']]] } }
         };
 
         fetchMock.mock(
             'begin:/gdc/app/projects/myFakeProjectId/executionResults/123?limit=500&offset=',
             (url) => {
-                const offset = url.replace(/.*offset=/, '').replace('%2C', ',');
+                const offset = url.replace(/.*offset=/, '');
                 return { status: 200, body: JSON.stringify(pagesByOffset[offset]) };
             }
         );
@@ -232,7 +313,8 @@ describe('executeAfm', () => {
                         paging: {
                             total: [501],
                             offset: [0]
-                        }
+                        },
+                        headerItems: [[['A']]]
                     }
                 }
             });

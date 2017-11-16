@@ -36,7 +36,7 @@ function fetchExecutionResult(pollingUri, offset) {
 
 // works only for one or two dimensions
 export function mergePageData(result, currentPage) {
-    const { paging, data } = currentPage.executionResult;
+    const { paging, data, headerItems } = currentPage.executionResult;
     const rowOffset = paging.offset[0];
     if (result.executionResult.data[rowOffset]) { // appending columns to existing rows
         for (let i = 0; i < data.length; i += 1) {
@@ -45,6 +45,23 @@ export function mergePageData(result, currentPage) {
     } else { // appending new rows
         result.executionResult.data.push(...data);
     }
+
+    const doDimension = (dim) => {
+        const otherDimension = (dim === 0 ? 1 : 0);
+        const isEdge = (paging.offset[otherDimension] === 0);
+        if (isEdge) {
+            for (let attrIdx = 0; attrIdx < headerItems[dim].length; attrIdx += 1) {
+                result.executionResult.headerItems[dim][attrIdx].push(...headerItems[dim][attrIdx]);
+            }
+        }
+    };
+
+    // careful: for 1 dimension we already have the headers from first page
+    if (paging.offset.length > 1) {
+        doDimension(0);
+        doDimension(1);
+    }
+
     return result;
 }
 
