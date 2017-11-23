@@ -17,7 +17,8 @@ import {
     assign,
     partial,
     flatten,
-    omit
+    omit,
+    set
 } from 'lodash';
 
 import {
@@ -26,6 +27,10 @@ import {
     get as xhrGet,
     parseJSON
 } from '../xhr';
+
+import {
+    getObjects
+} from '../metadata';
 
 import Rules from '../utils/rules';
 import { sortDefinitions } from '../utils/definitions';
@@ -148,24 +153,24 @@ export function getData(projectId, columns, executionConfiguration = {}, setting
         ...settings,
         body: JSON.stringify(request)
     })
-    .then(parseJSON)
-    .then((result) => {
-        executedReport.headers = wrapMeasureIndexesFromMappings(
-            get(executionConfiguration, 'metricMappings'), result.executionResult.headers);
+        .then(parseJSON)
+        .then((result) => {
+            executedReport.headers = wrapMeasureIndexesFromMappings(
+                get(executionConfiguration, 'metricMappings'), result.executionResult.headers);
 
-        // Start polling on url returned in the executionResult for tabularData
-        return loadExtendedDataResults(result.executionResult.extendedTabularDataResult, settings);
-    })
-    .then((r) => {
-        const { result, status } = r;
+            // Start polling on url returned in the executionResult for tabularData
+            return loadExtendedDataResults(result.executionResult.extendedTabularDataResult, settings);
+        })
+        .then((r) => {
+            const { result, status } = r;
 
-        return Object.assign({}, executedReport, {
-            rawData: get(result, 'extendedTabularDataResult.values', []),
-            warnings: get(result, 'extendedTabularDataResult.warnings', []),
-            isLoaded: true,
-            isEmpty: status === 204
+            return Object.assign({}, executedReport, {
+                rawData: get(result, 'extendedTabularDataResult.values', []),
+                warnings: get(result, 'extendedTabularDataResult.warnings', []),
+                isLoaded: true,
+                isEmpty: status === 204
+            });
         });
-    });
 }
 
 const MAX_TITLE_LENGTH = 1000;
@@ -216,7 +221,7 @@ const getGeneratedMetricExpression = (item) => {
     const where = filter(map(get(item, 'measureFilters'), getFilterExpression), e => !!e);
 
     return `SELECT ${aggregation ? `${aggregation}([${objectUri}])` : `[${objectUri}]`
-        }${notEmpty(where) ? ` WHERE ${where.join(' AND ')}` : ''}`;
+    }${notEmpty(where) ? ` WHERE ${where.join(' AND ')}` : ''}`;
 };
 
 const getPercentMetricExpression = ({ category }, measure) => {
@@ -253,17 +258,49 @@ const getGeneratedMetricIdentifier = (item, aggregation, expressionCreator, hash
     return `${type}_${identifier}.generated.${hash}${prefix}_${aggregation}`;
 };
 
-const isDateCategory = ({ category }) => category.type === 'date';
 const isDateFilter = ({ dateFilter }) => dateFilter;
 
-const getCategories = ({ categories }) => categories;
+function isMeasure(bucketItem) {
+    return get(bucketItem, 'measure') !== undefined;
+}
+function isCategory(bucketItem) {
+    return get(bucketItem, 'visualizationAttribute') !== undefined;
+}
+
+function getMeasures(buckets) {
+    return buckets.reduce((measuresList, bucket) =>
+        get(bucket, 'items').reduce((list, bucketItem) => {
+            if (isMeasure(bucketItem)) {
+                list.push(get(bucketItem, 'measure'));
+            }
+            return list;
+        }, measuresList)
+        , []);
+}
+
+function getCategories(buckets) {
+    return buckets.reduce((categoriesList, bucket) =>
+        get(bucket, 'items').reduce((list, bucketItem) => {
+            if (isCategory(bucketItem)) {
+                list.push(get(bucketItem, 'visualizationAttribute'));
+            }
+            return list;
+        }, categoriesList)
+        , []);
+}
+
 const getFilters = ({ filters }) => filters;
+
+function isDateCategory(category, attributesMap = {}) {
+    return get(get(attributesMap, get(category, 'displayForm'), {}), ['attribute', 'content', 'type']) !== undefined;
+}
 
 const getDateCategory = (mdObj) => {
     const category = find(getCategories(mdObj), isDateCategory);
 
     return get(category, 'category');
 };
+
 
 const getDateFilter = (mdObj) => {
     const dateFilter = find(getFilters(mdObj), isDateFilter);
@@ -287,8 +324,8 @@ const getMetricSort = (sort, isPoPMetric) => {
 };
 
 const createPureMetric = (measure, mdObj, measureIndex) => ({
-    element: get(measure, 'objectUri'),
-    sort: getMetricSort(get(measure, 'sort')),
+    element: get(measure, ['definition', 'measureDefinition', 'item']),
+    // sort: getMetricSort(get(measure, 'sort')), // TODO use sorting from properties
     meta: { measureIndex }
 });
 
@@ -418,8 +455,11 @@ const createContributionPoPMetric = (measure, mdObj, measureIndex) => {
     return result;
 };
 
-const categoryToElement = ({ category }) =>
-    ({ element: get(category, 'displayForm'), sort: get(category, 'sort') });
+const categoryToElement = category =>
+    ({
+        element: get(category, 'displayForm')
+        // sort: get(category, 'sort') // TODO use sorting from properties
+    });
 
 const attributeFilterToWhere = (f) => {
     const elements = get(f, 'listAttributeFilter.default.attributeElements', []);
@@ -455,10 +495,10 @@ const dateFilterToWhere = (f) => {
     return { [dateUri]: { $between: between, $granularity: granularity } };
 };
 
-const isPoP = ({ showPoP }) => showPoP;
-const isContribution = ({ showInPercent }) => showInPercent;
+const isPoP = ({ definition }) => get(definition, 'popMeasureDefinition') !== undefined;
+const isContribution = ({ definition }) => get(definition, ['measureDefinition', 'computeRatio']);
 
-const isCalculatedMeasure = ({ type }) => type === 'metric';
+const isCalculatedMeasure = ({ definition }) => get(definition, ['measureDefinition', 'aggregation']) === undefined;
 
 const rules = new Rules();
 
@@ -523,15 +563,7 @@ function getWhere(filters) {
 
 const sortToOrderBy = item => ({ column: get(item, 'element'), direction: get(item, 'sort') });
 
-const getOrderBy = (metrics, categories, type) => {
-    // For bar chart we always override sorting to sort by values (first metric)
-    if (type === 'bar' && notEmpty(metrics)) {
-        return [{
-            column: first(compact(map(metrics, 'element'))),
-            direction: 'desc'
-        }];
-    }
-
+const getOrderBy = (metrics, categories) => {
     return map(filter([...categories, ...metrics], item => item.sort), sortToOrderBy);
 };
 
@@ -557,6 +589,60 @@ export const mdToExecutionConfiguration = (mdObj, options = {}) => {
         where: columns.length ? getWhere(filters) : {},
         metricMappings: map(metrics, m => ({ element: m.element, ...m.meta }))
     };
+};
+
+const REG_URI_OBJ = /\/gdc\/md\/(\S+)\/obj\/\d+/;
+
+function getProjectId(uri) {
+    const uriSplit = REG_URI_OBJ.exec(uri) || [];
+    const projectId = uriSplit[1];
+    return projectId;
+}
+
+function getAttributesMap(categories) {
+    const categoryDisplayForms = categories.map(category => get(category, 'displayForm'));
+    if (categoryDisplayForms.length === 0) {
+        return Promise.resolve({});
+    }
+    const projectId = getProjectId(categoryDisplayForms[0]);
+    return getObjects(projectId, categoryDisplayForms).then((displayForms) => {
+        const attributeUris = displayForms.map(displayForm => get(displayForm, ['attributeDisplayForm', 'content', 'formOf']));
+        return getObjects(projectId, attributeUris).then((attributes) => {
+            return displayForms.reduce(
+                (attributesMap, displayForm) =>
+                    set(attributesMap,
+                        get(displayForm, ['meta', 'uri']),
+                        attributes.find(attribute => get(attribute, ['attribute', 'meta', 'uri']) === get(displayForm, ['attributeDisplayForm', 'content', 'formOf']))),
+                {}
+            );
+        });
+    });
+}
+
+export const newMdToExecutionConfiguration = (mdObj, options = {}) => {
+    const buckets = get(mdObj, 'buckets');
+    const measures = getMeasures(buckets);
+    const metrics = flatten(map(measures, (measure, index) => getMetricFactory(measure)(measure, buckets, index)));
+
+    let categories = getCategories(buckets);
+    return getAttributesMap(categories).then((attributesMap) => {
+        let filters = getFilters(mdObj);
+        if (options.removeDateItems) {
+            categories = filter(categories, category => !isDateCategory(category, attributesMap));
+            filters = filter(filters, item => !item.dateFilter);
+        }
+        categories = map(categories, categoryToElement);
+
+        const columns = compact(map([...categories, ...metrics], 'element'));
+
+        return {
+            columns,
+            orderBy: getOrderBy(metrics, categories),
+            definitions: sortDefinitions(compact(map(metrics, 'definition'))),
+            where: columns.length ? getWhere(filters) : {},
+            metricMappings: map(metrics, m => ({ element: m.element, ...m.meta }))
+        };
+    });
 };
 
 const getOriginalMetricFormats = (mdObj) => {
