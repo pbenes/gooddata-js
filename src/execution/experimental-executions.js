@@ -330,6 +330,7 @@ const createPureMetric = (measure, mdObj, measureIndex) => ({
 });
 
 const createDerivedMetric = (measure, mdObj, measureIndex) => {
+    // TODO fix this
     const { format, sort } = measure;
     const title = getBaseMetricTitle(measure.title);
 
@@ -356,6 +357,7 @@ const createDerivedMetric = (measure, mdObj, measureIndex) => {
 };
 
 const createContributionMetric = (measure, mdObj, measureIndex) => {
+    // TODO fix this
     const category = first(getCategories(mdObj));
     const getMetricExpression = partial(getPercentMetricExpression, category);
     const title = getBaseMetricTitle(get(measure, 'title'));
@@ -378,6 +380,7 @@ const createContributionMetric = (measure, mdObj, measureIndex) => {
 };
 
 const createPoPMetric = (measure, mdObj, measureIndex) => {
+    // TODO fix this
     const title = getPoPMetricTitle(get(measure, 'title'));
     const format = get(measure, 'format');
     const hasher = partial(getGeneratedMetricHash, title, format);
@@ -421,6 +424,7 @@ const createPoPMetric = (measure, mdObj, measureIndex) => {
 };
 
 const createContributionPoPMetric = (measure, mdObj, measureIndex) => {
+    // TODO fix this
     const date = getDate(mdObj);
 
     const generated = createContributionMetric(measure, mdObj, measureIndex);
@@ -620,7 +624,7 @@ function getAttributesMap(categories) {
 }
 
 export const newMdToExecutionConfiguration = (mdObj, options = {}) => {
-    const buckets = get(mdObj, 'buckets');
+    const buckets = get(mdObj, 'buckets', []);
     const measures = getMeasures(buckets);
     const metrics = flatten(map(measures, (measure, index) => getMetricFactory(measure)(measure, buckets, index)));
 
