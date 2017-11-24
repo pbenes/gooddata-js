@@ -92,7 +92,7 @@ export function loadItems(projectId, options = {}) {
 
     let bucketItems = get(cloneDeep(options), 'bucketItems');
     if (bucketItems) {
-        bucketItems = bucketItemsToExecConfig(bucketItems);
+        bucketItems = []; // TODO: fix bucket items bucketItemsToExecConfig(bucketItems);
         return loadCatalog(
             projectId,
             {
