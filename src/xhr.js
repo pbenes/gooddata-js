@@ -207,6 +207,14 @@ export function ajax(originalUrl, tempSettings = {}) {
             finalSettings.method = 'GET';
             delete finalSettings.data;
             delete finalSettings.body;
+
+
+            // validElements returns 303 first with new url on which we should poll -- therefore we need to
+            // poll on that new provided url instead of trying to poll on the original one
+            if (url.match(/validElements/)) {
+                finalUrl = response.url;
+            }
+
             return handlePolling(finalUrl, finalSettings, ajax);
         }
         return response;
