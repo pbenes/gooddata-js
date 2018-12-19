@@ -23,6 +23,17 @@ describe('project', () => {
                 return range(1, n + 1).map((i: number) => ({ project: { meta: { title: `p${i}` } } }));
             };
 
+            it('should resolve with empty array when 204', () => {
+                fetchMock.mock(
+                    '/gdc/account/profile/myProfileId/projects?offset=0&limit=100',
+                    204
+                );
+                return createProject()
+                    .getProjects('myProfileId')
+                    .then((result) => {
+                        expect(result.length).toBe(0);
+                    });
+            });
             it('should reject with 400 when resource fails', () => {
                 fetchMock.mock(
                     '/gdc/account/profile/myProfileId/projects?offset=0&limit=100',

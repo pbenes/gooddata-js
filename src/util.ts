@@ -105,7 +105,7 @@ export function getAllPagesByOffsetLimit(xhr: any, uri: string, itemKey: string,
             .then((r: any) => r.getData())
             .then((dataObjects: any[]) => {
             const projects = get(dataObjects, itemKey);
-            const data = pagesData.concat(projects.items);
+            const data = pagesData.concat(get(projects, 'items', []));
 
             const totalCount = get(projects, 'paging.totalCount', 0);
             const nextPage = offset + PAGE_LIMIT;
