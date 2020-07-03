@@ -10,7 +10,6 @@ import { v4 as uuid } from "uuid";
 
 import { IProperties } from "./interfaces";
 import { isUri } from "./DataLayer/helpers/uri";
-
 /*
  * Helpers
  */
@@ -55,14 +54,14 @@ type ConversionFunction = (
 ) => IConversionResult;
 
 export type ReferenceConverter = (
-    mdObject: VisualizationObject.IVisualizationObject,
+    mdObject: VisualizationObject.IObjectWithProperties,
     idGenerator?: IdGenerator,
-) => VisualizationObject.IVisualizationObject;
+) => VisualizationObject.IObjectWithProperties;
 
 const createConverter = (conversionFunction: ConversionFunction): ReferenceConverter => (
-    mdObject: VisualizationObject.IVisualizationObject,
+    mdObject: VisualizationObject.IObjectWithProperties,
     idGenerator: IdGenerator = defaultIdGenerator,
-): VisualizationObject.IVisualizationObject => {
+): VisualizationObject.IObjectWithProperties => {
     const { content } = mdObject;
     if (!content) {
         return mdObject;
@@ -85,15 +84,16 @@ const createConverter = (conversionFunction: ConversionFunction): ReferenceConve
 
     // set the new properties and references
     const referencesProp = isEmpty(convertedReferences) ? undefined : { references: convertedReferences };
-
-    return {
+    const result: VisualizationObject.IObjectWithProperties = {
         ...mdObject,
         content: {
-            ...(omit(mdObject.content, "references") as VisualizationObject.IVisualizationObjectContent),
+            ...omit(mdObject.content, "references"),
             properties: stringify(convertedProperties),
             ...referencesProp,
         },
     };
+
+    return result;
 };
 
 /*
