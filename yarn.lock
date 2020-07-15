@@ -283,10 +283,10 @@
     tslint-microsoft-contrib "6.1.0"
     tslint-react "3.6.0"
 
-"@gooddata/typings@2.25.0-alpha-bertold8-ine-one-4414-2020-07-09T06-54-04-330Z":
-  version "2.25.0-alpha-bertold8-ine-one-4414-2020-07-09T06-54-04-330Z"
-  resolved "https://registry.yarnpkg.com/@gooddata/typings/-/typings-2.25.0-alpha-bertold8-ine-one-4414-2020-07-09T06-54-04-330Z.tgz#f6bc5b51a59f308842e558cae9961f8a8efa5006"
-  integrity sha512-aCxELw4o3TyooLyekTuKt7Pf1R6oInic98bJWLhRlrPGX64/ajBiiVqKH8PW8/ytU4XL2fmUFbobNgh2vclDig==
+"@gooddata/typings@2.25.0-alpha-pbenes-ine-one-4414-2020-07-15T12-30-46-335Z":
+  version "2.25.0-alpha-pbenes-ine-one-4414-2020-07-15T12-30-46-335Z"
+  resolved "https://registry.yarnpkg.com/@gooddata/typings/-/typings-2.25.0-alpha-pbenes-ine-one-4414-2020-07-15T12-30-46-335Z.tgz#701fc36cabdd94bda4dd360e7bc4bd81b3166339"
+  integrity sha512-nwd9o1Z2Tehf+hGBX0b+2eJ4kqyCpW1lUItzYLgYR3ggJdaDW3MkPx3NU1vQ/oh6Bv219MfnVLF1bU1hdRoCDQ==
   dependencies:
     lodash "^4.17.11"
 

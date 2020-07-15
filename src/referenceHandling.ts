@@ -53,15 +53,23 @@ type ConversionFunction = (
     idGenerator: IdGenerator,
 ) => IConversionResult;
 
+export interface IObjectWithProperties {
+    content: {
+        properties?: string;
+        references?: VisualizationObject.IReferenceItems;
+        [keys: string]: any;
+    };
+}
+
 export type ReferenceConverter = (
-    mdObject: VisualizationObject.IObjectWithProperties,
+    mdObject: IObjectWithProperties,
     idGenerator?: IdGenerator,
-) => VisualizationObject.IObjectWithProperties;
+) => IObjectWithProperties;
 
 const createConverter = (conversionFunction: ConversionFunction): ReferenceConverter => (
-    mdObject: VisualizationObject.IObjectWithProperties,
+    mdObject: IObjectWithProperties,
     idGenerator: IdGenerator = defaultIdGenerator,
-): VisualizationObject.IObjectWithProperties => {
+): IObjectWithProperties => {
     const { content } = mdObject;
     if (!content) {
         return mdObject;
@@ -84,7 +92,7 @@ const createConverter = (conversionFunction: ConversionFunction): ReferenceConve
 
     // set the new properties and references
     const referencesProp = isEmpty(convertedReferences) ? undefined : { references: convertedReferences };
-    const result: VisualizationObject.IObjectWithProperties = {
+    const result: IObjectWithProperties = {
         ...mdObject,
         content: {
             ...omit(mdObject.content, "references"),
