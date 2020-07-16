@@ -1,5 +1,5 @@
 // (C) 2007-2020 GoodData Corporation
-import { VisualizationObject } from "@gooddata/typings";
+import { VisualizationObject, IVisualizationWidget } from "@gooddata/typings";
 import isEmpty from "lodash/isEmpty";
 import omit from "lodash/omit";
 import isArray from "lodash/isArray";
@@ -53,23 +53,19 @@ type ConversionFunction = (
     idGenerator: IdGenerator,
 ) => IConversionResult;
 
-export interface IObjectWithProperties {
-    content: {
-        properties?: string;
-        references?: VisualizationObject.IReferenceItems;
-        [keys: string]: any;
-    };
-}
+export type IObjectWithProperties = VisualizationObject.IVisualizationObject | IVisualizationWidget;
 
 export type ReferenceConverter = (
     mdObject: IObjectWithProperties,
     idGenerator?: IdGenerator,
 ) => IObjectWithProperties;
 
-const createConverter = (conversionFunction: ConversionFunction): ReferenceConverter => (
-    mdObject: IObjectWithProperties,
+const createConverter = (conversionFunction: ConversionFunction): ReferenceConverter => <
+    T extends IObjectWithProperties
+>(
+    mdObject: T,
     idGenerator: IdGenerator = defaultIdGenerator,
-): IObjectWithProperties => {
+): T => {
     const { content } = mdObject;
     if (!content) {
         return mdObject;
@@ -92,7 +88,7 @@ const createConverter = (conversionFunction: ConversionFunction): ReferenceConve
 
     // set the new properties and references
     const referencesProp = isEmpty(convertedReferences) ? undefined : { references: convertedReferences };
-    const result: IObjectWithProperties = {
+    const result: T = {
         ...mdObject,
         content: {
             ...omit(mdObject.content, "references"),
